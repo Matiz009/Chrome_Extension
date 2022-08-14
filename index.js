@@ -1,50 +1,58 @@
-let btn = document.getElementById("btn-el");
-
-let myLeads = '["www.google.com", "www.facebook.com", "www.youtube.com"]';
+let myLeads = [];
 
 const inputEl = document.getElementById("input-el");
 
+const input_btn = document.getElementById("btn-el");
+
 const ulEl = document.getElementById("ul-el");
 
-localStorage.setItem("myLeads", "https://www.google.com");
+const leadsFromLocalStorage = JSON.parse(localStorage.getItem("myLeads"));
 
-let link = localStorage.getItem("myLeads");
+const checkTruthy = Boolean(leadsFromLocalStorage);
 
-//localStorage.clear();
-console.log(link);
+const btn_del = document.getElementById("btn-del");
 
-let listOfItems = "";
+const btn_tab = document.getElementById("btn-tab");
 
-btn.addEventListener("click", function() {
-    let input = inputEl.value;
-    console.log("Clicked");
-    myLeads = JSON.parse(myLeads);
-    myLeads.push(input);
-    console.log(myLeads);
-    renderItems();
-    inputEl.value = "";
-    localStorage.setItem("myLeads", JSON.stringify(myLeads));
-    console.log(localStorage.getItem("myLeads"));
-    let data = JSON.parse(localStorage.getItem(myLeads));
-    console.log(data);
+btn_tab.addEventListener("click", () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+        myLeads.push(tabs[0].url);
+        localStorage.setItem("myLeads", JSON.stringify(myLeads));
+        renderElements(myLeads);
+    });
 });
 
-function renderItems() {
-    for (let i = 0; i < myLeads.length; i++) {
-        /*listOfItems +=
-                                                                  "<li><a target='_blank' href='" +
-                                                                  myLeads[i] +
-                                                                  "'>" +
-                                                                  myLeads[i] +
-                                                                  "</a></li>";*/
-        /*another way of writing */
-        listOfItems += `           
+btn_del.addEventListener("dblclick", function() {
+    localStorage.clear();
+    myLeads = [];
+    renderElements(myLeads);
+    location.reload();
+});
+
+console.log(leadsFromLocalStorage);
+
+if (checkTruthy === true) {
+    myLeads = leadsFromLocalStorage;
+    renderElements(myLeads);
+}
+
+function renderElements(leads) {
+    let listItems = "";
+    for (let i = 0; i < leads.length; i++) {
+        listItems += `
             <li>
-                <a target='_blank' href='${myLeads[i]}'>
-                    ${myLeads[i]}
+                <a target='_blank' href='${leads[i]}'>
+                    ${leads[i]}
                 </a>
             </li>
         `;
-        ulEl.innerHTML = listOfItems;
     }
+    ulEl.innerHTML = listItems;
 }
+
+input_btn.addEventListener("click", function() {
+    myLeads.push(inputEl.value);
+    inputEl.value = "";
+    localStorage.setItem("myLeads", JSON.stringify(myLeads));
+    renderElements(myLeads);
+});
